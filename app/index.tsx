@@ -1,14 +1,23 @@
+import { useAuthStore } from "@/stores/authStore";
+import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import { Text, View } from "react-native";
 
 
 
 export default function Index() {
-  return (
-    <View className="flex-1 items-center justify-center bg-white">
-    <Text className="text-xl font-bold text-blue-500">
-      Welcome to Nativewind!
-    </Text>
-  </View>
-  );
+  const router = useRouter()
+  const {isLoading, token} = useAuthStore()
+
+  useEffect(() => {
+    if(isLoading) return
+    if(token){
+      router.replace('/(main)/home')
+    }else{
+      router.replace('/(auth)/welcome')
+    }
+  }, [isLoading, token])
+
+  return  <View className="flex-1 bg-surface-bg" />;
 }
 
