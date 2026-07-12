@@ -1,9 +1,10 @@
 import { useAuthStore } from '@/stores/authStore'
 import axios from 'axios'
 
-const BASE_URL =  'http://localhost:8080'
+const BASE_URL =  'https://alicetutor-backend-production.up.railway.app'
 
 // https://alicetutor-backend-production.up.railway.app
+// http://localhost:8080
 
 export const apiClient = axios.create({
     baseURL: BASE_URL,
