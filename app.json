@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "alicetutor-mobile",
+    "name": "AliceTutor",
     "slug": "alicetutor-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -32,7 +32,7 @@
         {
           "backgroundColor": "#208AEF",
           "android": {
-            "image": "./assets/images/splash-icon.png",
+            "image": "./assets/images/alicetutor-icon-512.png",
             "imageWidth": 76
           }
         }
