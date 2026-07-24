@@ -180,53 +180,56 @@ export default function QuizScreen() {
       
         setIsSubmitting(true)
         try {
-          // Include current answer since state may not have updated yet
-          const currentAnswer = {
-            questionId: currentQuestion._id,
-            selectedAnswer: selectedAnswer!,
-          }
-          const allAnswers = [...answers, currentAnswer]
+            // Include current answer since state may not have updated yet
+            const currentAnswer = {
+                questionId: currentQuestion._id,
+                selectedAnswer: selectedAnswer!,
+            }
+            // Only append if not already in answers state
+            const alreadyRecorded = answers.some(a => a.questionId === currentQuestion._id)
+            const allAnswers = alreadyRecorded ? [...answers] : [...answers, currentAnswer]
       
-          // Group by materialId
-          const byMaterial: Record<string, typeof allAnswers> = {}
-          allAnswers.forEach((answer) => {
-            const question = questions.find(q => q._id === answer.questionId)
-            if (!question) return
-            const mid = question.materialId
-            if (!byMaterial[mid]) byMaterial[mid] = []
-            byMaterial[mid].push(answer)
-          })
+            // Group by materialId
+            const byMaterial: Record<string, typeof allAnswers> = {}
+            allAnswers.forEach((answer) => {
+                const question = questions.find(q => q._id === answer.questionId)
+                if (!question) return
+                const mid = question.materialId
+                if (!byMaterial[mid]) byMaterial[mid] = []
+                byMaterial[mid].push(answer)
+            })
       
-          const sessionId = `${courseId}_${Date.now()}`
+            const sessionId = `${courseId}_${Date.now()}`
 
-          const results = await Promise.all(
-            Object.entries(byMaterial).map(([materialId, materialAnswers]) =>
-              submitQuiz(courseId, { materialId, answers: materialAnswers, sessionId })
+            const results = await Promise.all(
+                Object.entries(byMaterial).map(([materialId, materialAnswers]) =>
+                submitQuiz(courseId, { materialId, answers: materialAnswers, sessionId })
+                )
             )
-          )
-      
-          const merged: QuizSubmitResult = { ...results[0].data.result }
-          results.slice(1).forEach(r => {
-            const res = r.data.result
-            merged.correctCount   += res.correctCount
-            merged.totalQuestions += res.totalQuestions
-            merged.answers.push(...res.answers)
-            merged.difficultyBreakdown.recall.total        += res.difficultyBreakdown.recall.total
-            merged.difficultyBreakdown.recall.correct      += res.difficultyBreakdown.recall.correct
-            merged.difficultyBreakdown.application.total   += res.difficultyBreakdown.application.total
-            merged.difficultyBreakdown.application.correct += res.difficultyBreakdown.application.correct
-            merged.difficultyBreakdown.analysis.total      += res.difficultyBreakdown.analysis.total
-            merged.difficultyBreakdown.analysis.correct    += res.difficultyBreakdown.analysis.correct
-          })
-          merged.accuracy = Math.round((merged.correctCount / merged.totalQuestions) * 100)
-      
-          queryClient.invalidateQueries({ queryKey: ['course-progress', courseId] })
-          queryClient.invalidateQueries({ queryKey: ['dashboard'] })
-          setResult(merged)
+
+        
+            const merged: QuizSubmitResult = { ...results[0].data.result }
+            results.slice(1).forEach(r => {
+                const res = r.data.result
+                merged.correctCount   += res.correctCount
+                merged.totalQuestions += res.totalQuestions
+                merged.answers.push(...res.answers)
+                merged.difficultyBreakdown.recall.total        += res.difficultyBreakdown.recall.total
+                merged.difficultyBreakdown.recall.correct      += res.difficultyBreakdown.recall.correct
+                merged.difficultyBreakdown.application.total   += res.difficultyBreakdown.application.total
+                merged.difficultyBreakdown.application.correct += res.difficultyBreakdown.application.correct
+                merged.difficultyBreakdown.analysis.total      += res.difficultyBreakdown.analysis.total
+                merged.difficultyBreakdown.analysis.correct    += res.difficultyBreakdown.analysis.correct
+            })
+            merged.accuracy = Math.round((merged.correctCount / merged.totalQuestions) * 100)
+        
+            queryClient.invalidateQueries({ queryKey: ['course-progress', courseId] })
+            queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+            setResult(merged)
         } catch {
-          router.back()
+            router.back()
         } finally {
-          setIsSubmitting(false)
+            setIsSubmitting(false)
         }
       }
 
