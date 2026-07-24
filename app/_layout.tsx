@@ -5,6 +5,9 @@ import * as SplashScreen from 'expo-splash-screen'
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuthStore } from "@/stores/authStore";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { View } from "react-native";
+import OfflineBanner from "@/components/OfflineBanner";
 
 SplashScreen.preventAutoHideAsync()
 
@@ -20,6 +23,7 @@ export default function RootLayout() {
   })
 
   const { loadSession } = useAuthStore()
+  const { isOnline } = useNetworkStatus()
 
   useEffect(() => {
     if(fontsLoaded || fontError){
@@ -37,7 +41,10 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Stack screenOptions={{ headerShown: false }}/>
+      <View style={{flex:1}}>
+        <Stack screenOptions={{ headerShown: false }}/>
+        {!isOnline && <OfflineBanner />}
+      </View>
     </QueryClientProvider>
   )
 }

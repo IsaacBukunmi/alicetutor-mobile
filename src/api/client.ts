@@ -1,10 +1,8 @@
 import { useAuthStore } from '@/stores/authStore'
 import axios from 'axios'
 
-const BASE_URL =  'https://alicetutor-backend-production.up.railway.app'
+const BASE_URL =  process.env.EXPO_PUBLIC_API_URL
 
-// https://alicetutor-backend-production.up.railway.app
-// http://localhost:8080
 
 export const apiClient = axios.create({
     baseURL: BASE_URL,
@@ -24,6 +22,7 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
+        // console.log(error.response)
         if(error.response?.status === 401){
             useAuthStore.getState().signOut()
         }

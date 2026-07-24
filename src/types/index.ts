@@ -39,7 +39,7 @@ export type CourseProgress = {
     progressByMaterial:{
         materialId: string
         title: string
-        attemts: number
+        attempts: number
         bestAccuracy: number
         latestAccuracy: number
         status: 'mastered' | 'developing' | 'struggling' | 'not_started'
@@ -54,6 +54,7 @@ export type StudyData = {
     masteryPercent: number  
     lastStudied: string     
     courseId: string
+    status: string
 }
 
 export type UpcomingExamsData = {

@@ -1,6 +1,7 @@
 import { getQuiz, submitQuiz } from "@/api/course"
 import ScreenLoader from "@/components/ScreenLoader"
 import { Colors } from "@/constants"
+import { useQuiz } from "@/hooks/useCourses"
 import { QuizQuestion, QuizSubmitResult } from "@/types"
 import { Ionicons } from "@expo/vector-icons"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -136,13 +137,7 @@ export default function QuizScreen() {
     const queryClient = useQueryClient()
 
     // quiz data 
-    const { data: quizData, isLoading } = useQuery({
-        queryKey: ['quiz', courseId],
-        queryFn: async () => {
-            const { data } = await getQuiz(courseId)
-            return data.quiz
-        }
-    })
+    const { data: quizData, isLoading } = useQuiz(courseId)
 
     // session state
     const [currentIndex, setCurrentIndex] = useState(0)
@@ -202,9 +197,11 @@ export default function QuizScreen() {
             byMaterial[mid].push(answer)
           })
       
+          const sessionId = `${courseId}_${Date.now()}`
+
           const results = await Promise.all(
             Object.entries(byMaterial).map(([materialId, materialAnswers]) =>
-              submitQuiz(courseId, { materialId, answers: materialAnswers })
+              submitQuiz(courseId, { materialId, answers: materialAnswers, sessionId })
             )
           )
       

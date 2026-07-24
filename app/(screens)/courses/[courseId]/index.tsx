@@ -1,6 +1,7 @@
 import { deleteCourse } from '@/api/course'
 import CourseFormModal from '@/components/CourseFormModal'
 import ScreenLoader from '@/components/ScreenLoader'
+import SpinnerIcon from '@/components/SpinnerIcon'
 import UploadMaterialModal from '@/components/UploadMaterialModal'
 import { Colors } from '@/constants'
 import { useCourse, useCourseMaterials, useCourseProgress } from '@/hooks/useCourses'
@@ -9,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useState } from 'react'
-import { View, Text, ScrollView, StyleSheet, Pressable, Modal, Alert } from 'react-native'
+import { View, Text, ScrollView, StyleSheet, Pressable, Modal, Alert, RefreshControl, ActivityIndicator } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const getDaysToExam = (examDate: string | null | undefined) => {
@@ -68,11 +69,14 @@ function ActionButton({icon, label, onPress, iconColor="#000", active}:{ icon: s
 	)
 }
 
-function MaterialRow({ material }: { material: Material }) {
+function MaterialRow({ material, onPress }: { material: Material; onPress: () => void }) {
 	const badge = getFileTypeBadge(material.fileType)
 
 	return (
-		<View style={styles.materialRowCtn}>
+		<Pressable 
+			style={styles.materialRowCtn}
+			onPress={onPress}
+		>
 			<View style={[styles.badgeCtn, {backgroundColor: badge.bg,}]}>
 				<Text style={{
 					fontFamily: 'PlusJakartaSans-Bold',
@@ -91,24 +95,25 @@ function MaterialRow({ material }: { material: Material }) {
 				}}>
 					{material.title}
 				</Text>
-				<View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-					<View style={{
-						width: 6,
-						height: 6,
-						borderRadius: 999,
-						backgroundColor: material.isProcessed ? Colors.green : Colors.amber,
-					}} />
-					<Text style={{
-						fontFamily: 'PlusJakartaSans-Medium',
-						fontSize: 12,
-						color: material.isProcessed ? Colors.green : Colors.amberText,
-					}}>
-						{material.isProcessed ? 'Ready' : 'Processing...'}
-					</Text>
-				</View>
+				{
+					material.isProcessed ? (
+					<View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+						<View style={{ width: 6, height: 6, borderRadius: 999, backgroundColor: Colors.green }} />
+						<Text style={{ fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, color: Colors.green }}>
+						Ready
+						</Text>
+					</View>
+					) : (
+					<View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+						<SpinnerIcon size={12} color={Colors.amberText} />
+						<Text style={{ fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, color: Colors.amberText }}>
+						Processing...
+						</Text>
+					</View>
+				)}
 			</View>
 			<Ionicons name="chevron-forward" size={16} color={Colors.inkMuted} />
-		</View>
+		</Pressable>
 	)
 }
 
@@ -120,6 +125,7 @@ const CourseDetails = () => {
 	const [modalVisible, setModalVisible] = useState(false)
 	const [uploadModalVisible, setUploadModalVisible] = useState(false)
 	const queryClient = useQueryClient()
+	const [refreshing, setRefreshing] = useState(false)
 
 
 	const { data: course, isLoading: courseLoading } = useCourse(courseId)
@@ -151,6 +157,14 @@ const CourseDetails = () => {
 		)
 	}
 
+	const handleRefresh = async () => {
+		setRefreshing(true)
+		await queryClient.invalidateQueries({
+			queryKey:['course-materials', courseId]
+		})
+		setRefreshing(false)
+	}
+
 	if(courseLoading) return <ScreenLoader />
 
     return (
@@ -161,6 +175,13 @@ const CourseDetails = () => {
 			<ScrollView
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={{paddingBottom: 32}}
+				refreshControl={
+					<RefreshControl 
+						refreshing={refreshing}
+						onRefresh={handleRefresh}
+						tintColor={Colors.primary}
+					/>
+				}
 			>
 				{/* Hero Header */}
 				<View style={[styles.topSection, {paddingTop: insets.top + 24 }]}>
@@ -213,7 +234,7 @@ const CourseDetails = () => {
 						<ActionButton
 							icon="albums-outline"
 							label="Flashcards"
-							onPress={() => {}}
+							onPress={() => router.push(`/courses/${courseId}/flashcard`)}
 							iconColor={Colors.indigo}
 						/>
 						<ActionButton
@@ -238,7 +259,11 @@ const CourseDetails = () => {
 							{
 								materials && materials.length > 0 ? (
 								materials.map((material: Material, index: number) => (
-									<MaterialRow key={material._id} material={material} />
+									<MaterialRow 
+										key={material._id} 
+										material={material} 
+										onPress={() => router.push(`/courses/${courseId}/material/${material._id}`)}
+									/>
 								))
 							) : (
 								<View style={{ paddingVertical: 24, alignItems: 'center' }}>

@@ -70,4 +70,5 @@ export const submitQuiz = (courseId: string, payload: {
         questionId: string
         selectedAnswer: string
     }[]
+    sessionId: string
 })  => apiClient.post(`api/courses/${courseId}/quiz`, payload)

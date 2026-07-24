@@ -27,6 +27,15 @@ const getMasteryColor = (percent: number) => {
     return Colors.red
 }
 
+const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'mastered':    return { bg: Colors.greenSoft,  color: Colors.greenText,  label: 'mastered' }
+      case 'developing':  return { bg: Colors.amberSoft,  color: Colors.amberText,  label: 'developing' }
+      case 'struggling':  return { bg: Colors.redSoft,    color: Colors.redText,    label: 'struggling' }
+      default:            return { bg: Colors.divider,    color: Colors.inkSecondary, label: 'not started' }
+    }
+}
+
 const ExamCard = ({item, index}:{ item: UpcomingExamsData, index: number}) => {
     return(
         <View style={{
@@ -70,6 +79,8 @@ const ExamCard = ({item, index}:{ item: UpcomingExamsData, index: number}) => {
 
 const StudyCard = ({item}: {item: StudyData}) => {
     const masteryColor = getMasteryColor(item.masteryPercent)
+    const statusStyle = getStatusStyle(item.status)
+
     return(
         <View 
             style={{
@@ -89,11 +100,11 @@ const StudyCard = ({item}: {item: StudyData}) => {
             }}
         >
             <View>
-                <View style={{flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+                <View style={{flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:4}}>
                     <Text style={{
                         fontFamily:'PlusJakartaSans-ExtraBold',
                         fontSize:15,
-                        marginBottom:3,
+                        
                     }}>
                         {item.materialName}
                     </Text>
@@ -103,14 +114,30 @@ const StudyCard = ({item}: {item: StudyData}) => {
                         color: Colors.inkSecondary
                     }}>{item.masteryPercent}%</Text>
                 </View>
-                <View style={{flexDirection:'row', gap: 5, marginBottom:8}}>
-                    <Text style={courseSubTextStyle}>
-                        {item.courseCode}
-                    </Text>
-                    <Text>·</Text>
-                    <Text style={courseSubTextStyle}>
-                        {formatLastStudied(item.lastStudied)}
-                    </Text>
+                <View style={{flexDirection: 'row', justifyContent:'space-between', alignItems: 'center', marginBottom:8}}>
+                    <View style={{flexDirection:'row', gap: 5,}}>
+                        <Text style={courseSubTextStyle}>
+                            {item.courseCode}
+                        </Text>
+                        <Text>·</Text>
+                        <Text style={courseSubTextStyle}>
+                            {formatLastStudied(item.lastStudied)}
+                        </Text>
+                    </View>
+                    <View
+                        style={{
+                            backgroundColor: statusStyle.bg,
+                            borderRadius: 999,
+                            paddingHorizontal: 8,
+                            paddingVertical: 3,
+                        }}
+                    >
+                        <Text style={{
+                            fontFamily: 'PlusJakartaSans-Bold',
+                            fontSize: 11,
+                            color: statusStyle.color,
+                        }}>{statusStyle.label}</Text>
+                    </View>
                 </View>
                 <ProgressBar progress={item.masteryPercent} bgColor={masteryColor}/>
             </View>

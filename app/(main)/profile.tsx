@@ -26,8 +26,9 @@ const Profile = () => {
             <ScrollView
                 showsVerticalScrollIndicator={false}
             >
-           
-                 <Text style={styles.profileHeading}>Profile</Text>
+                <View>
+                    <Text style={styles.profileHeading}>Profile</Text>
+                </View>
                  <View style={styles.infoContainer}>
                     <View style={styles.avatar}>
                         <Text style={styles.avatarText}>IA</Text>
@@ -37,8 +38,8 @@ const Profile = () => {
                 </View>
                 <Pressable
                     onPress={() => handleLogout()}
-                    
-                >   <View style={styles.signOutBtn}>
+                >   
+                    <View style={styles.signOutBtn}>
                         <Text style={styles.signOutText}>Sign out</Text>
                     </View>
                 </Pressable>
