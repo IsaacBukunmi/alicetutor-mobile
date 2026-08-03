@@ -147,6 +147,7 @@ export default function QuizScreen() {
     const [result, setResult] = useState<QuizSubmitResult | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [showExitConfirm, setShowExitConfirm] = useState(false)
+    const [isOfflineResult, setIsOfflineResult] = useState(false)
 
     if(isLoading || !quizData) return <ScreenLoader />
 
@@ -170,6 +171,69 @@ export default function QuizScreen() {
         }])
     }
 
+    // const handleNext = async () => {
+    //     if (!isLastQuestion) {
+    //       setCurrentIndex(prev => prev + 1)
+    //       setSelectedAnswer(null)
+    //       setRevealed(false)
+    //       return
+    //     }
+      
+    //     setIsSubmitting(true)
+    //     try {
+    //         // Include current answer since state may not have updated yet
+    //         const currentAnswer = {
+    //             questionId: currentQuestion._id,
+    //             selectedAnswer: selectedAnswer!,
+    //         }
+    //         // Only append if not already in answers state
+    //         const alreadyRecorded = answers.some(a => a.questionId === currentQuestion._id)
+    //         const allAnswers = alreadyRecorded ? [...answers] : [...answers, currentAnswer]
+      
+    //         // Group by materialId
+    //         const byMaterial: Record<string, typeof allAnswers> = {}
+    //         allAnswers.forEach((answer) => {
+    //             const question = questions.find(q => q._id === answer.questionId)
+    //             if (!question) return
+    //             const mid = question.materialId
+    //             if (!byMaterial[mid]) byMaterial[mid] = []
+    //             byMaterial[mid].push(answer)
+    //         })
+      
+    //         const sessionId = `${courseId}_${Date.now()}`
+
+    //         const results = await Promise.all(
+    //             Object.entries(byMaterial).map(([materialId, materialAnswers]) =>
+    //             submitQuiz(courseId, { materialId, answers: materialAnswers, sessionId })
+    //             )
+    //         )
+
+        
+    //         const merged: QuizSubmitResult = { ...results[0].data.result }
+    //         results.slice(1).forEach(r => {
+    //             const res = r.data.result
+    //             merged.correctCount   += res.correctCount
+    //             merged.totalQuestions += res.totalQuestions
+    //             merged.answers.push(...res.answers)
+    //             merged.difficultyBreakdown.recall.total        += res.difficultyBreakdown.recall.total
+    //             merged.difficultyBreakdown.recall.correct      += res.difficultyBreakdown.recall.correct
+    //             merged.difficultyBreakdown.application.total   += res.difficultyBreakdown.application.total
+    //             merged.difficultyBreakdown.application.correct += res.difficultyBreakdown.application.correct
+    //             merged.difficultyBreakdown.analysis.total      += res.difficultyBreakdown.analysis.total
+    //             merged.difficultyBreakdown.analysis.correct    += res.difficultyBreakdown.analysis.correct
+    //         })
+    //         merged.accuracy = Math.round((merged.correctCount / merged.totalQuestions) * 100)
+        
+    //         queryClient.invalidateQueries({ queryKey: ['course-progress', courseId] })
+    //         queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    //         setResult(merged)
+    //     } catch {
+    //         router.back()
+    //     } finally {
+    //         setIsSubmitting(false)
+    //     }
+    // }
+
     const handleNext = async () => {
         if (!isLastQuestion) {
           setCurrentIndex(prev => prev + 1)
@@ -185,10 +249,11 @@ export default function QuizScreen() {
                 questionId: currentQuestion._id,
                 selectedAnswer: selectedAnswer!,
             }
+        
             // Only append if not already in answers state
             const alreadyRecorded = answers.some(a => a.questionId === currentQuestion._id)
             const allAnswers = alreadyRecorded ? [...answers] : [...answers, currentAnswer]
-      
+        
             // Group by materialId
             const byMaterial: Record<string, typeof allAnswers> = {}
             allAnswers.forEach((answer) => {
@@ -200,36 +265,74 @@ export default function QuizScreen() {
             })
       
             const sessionId = `${courseId}_${Date.now()}`
-
-            const results = await Promise.all(
+        
+            let allGraded: QuizSubmitResult['answers'] = []
+      
+            try {
+                // Try submitting to server first
+                const results = await Promise.all(
                 Object.entries(byMaterial).map(([materialId, materialAnswers]) =>
-                submitQuiz(courseId, { materialId, answers: materialAnswers, sessionId })
+                    submitQuiz(courseId, { materialId, answers: materialAnswers, sessionId })
                 )
-            )
-
+                )
+                // Flatten graded answers from all material submissions
+                allGraded = results.flatMap(r => r.data.result.answers)
+            } catch {
+                // Offline — grade locally using questions already in memory
+                console.log('Offline — grading locally')
+                setIsOfflineResult(true)
+                allGraded = allAnswers.map((answer) => {
+                    const question = questions.find(q => q._id === answer.questionId)!
+                    const isCorrect = answer.selectedAnswer === question.correctAnswer
+                    return {
+                        questionId: answer.questionId,
+                        selectedAnswer: answer.selectedAnswer,
+                        correctAnswer: question.correctAnswer,
+                        isCorrect,
+                        difficulty: question.difficulty,
+                        _id: `local_${answer.questionId}`,
+                    }
+                })
+            }
+      
+            // Build result from flat graded answers — same logic regardless of online/offline
+            const correctCount = allGraded.filter(a => a.isCorrect).length
+            const totalQuestions = allGraded.length
+            const accuracy = Math.round((correctCount / totalQuestions) * 100)
         
-            const merged: QuizSubmitResult = { ...results[0].data.result }
-            results.slice(1).forEach(r => {
-                const res = r.data.result
-                merged.correctCount   += res.correctCount
-                merged.totalQuestions += res.totalQuestions
-                merged.answers.push(...res.answers)
-                merged.difficultyBreakdown.recall.total        += res.difficultyBreakdown.recall.total
-                merged.difficultyBreakdown.recall.correct      += res.difficultyBreakdown.recall.correct
-                merged.difficultyBreakdown.application.total   += res.difficultyBreakdown.application.total
-                merged.difficultyBreakdown.application.correct += res.difficultyBreakdown.application.correct
-                merged.difficultyBreakdown.analysis.total      += res.difficultyBreakdown.analysis.total
-                merged.difficultyBreakdown.analysis.correct    += res.difficultyBreakdown.analysis.correct
+            // Recalculate difficulty breakdown from allGraded directly
+            const difficultyBreakdown = {
+                recall:      { total: 0, correct: 0 },
+                application: { total: 0, correct: 0 },
+                analysis:    { total: 0, correct: 0 },
+            }
+            allGraded.forEach(a => {
+                difficultyBreakdown[a.difficulty].total++
+                if (a.isCorrect) difficultyBreakdown[a.difficulty].correct++
             })
-            merged.accuracy = Math.round((merged.correctCount / merged.totalQuestions) * 100)
         
-            queryClient.invalidateQueries({ queryKey: ['course-progress', courseId] })
-            queryClient.invalidateQueries({ queryKey: ['dashboard'] })
-            setResult(merged)
+            const merged: QuizSubmitResult = {
+                student: '',
+                course: courseId,
+                material: '',
+                answers: allGraded,
+                correctCount,
+                totalQuestions,
+                accuracy,
+                difficultyBreakdown,
+                _id: `result_${Date.now()}`,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            }
+      
+          queryClient.invalidateQueries({ queryKey: ['course-progress', courseId] })
+          queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+          setResult(merged)
         } catch {
-            router.back()
+          // Catastrophic failure — go back
+          router.back()
         } finally {
-            setIsSubmitting(false)
+          setIsSubmitting(false)
         }
       }
 
@@ -278,6 +381,28 @@ export default function QuizScreen() {
                         }}>
                             {getPerformanceMessage(result.accuracy)}
                         </Text>
+                        {
+                            isOfflineResult && (
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 6,
+                                backgroundColor: Colors.amberSoft,
+                                borderRadius: 10,
+                                paddingHorizontal: 12,
+                                paddingVertical: 8,
+                                marginTop: 8,
+                            }}>
+                                <Ionicons name="cloud-offline-outline" size={14} color={Colors.amberText} />
+                                <Text style={{
+                                    fontFamily: 'PlusJakartaSans-Medium',
+                                    fontSize: 12.5,
+                                    color: Colors.amberText,
+                                }}>
+                                    Graded offline — result not saved to your history
+                                </Text>
+                            </View>
+                        )}
                         <Text style={{
                             fontFamily: 'PlusJakartaSans-Medium',
                             fontSize: 14,

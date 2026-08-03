@@ -11,6 +11,7 @@ export default function OfflineBanner() {
             paddingHorizontal: 16,
             paddingVertical: 8,
             gap: 8,
+            marginBottom:3
           }}>
             <Ionicons name="cloud-offline-outline" size={16} color={Colors.amberText} />
             <Text style={{

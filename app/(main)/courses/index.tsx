@@ -9,6 +9,8 @@ import { CourseData } from '@/types'
 import EmptyScreen from '@/components/EmptyScreen'
 import { useState } from 'react'
 import CourseFormModal from '@/components/CourseFormModal'
+import { useNetworkStatus } from '@/hooks/useNetworkStatus'
+import OfflineBanner from '@/components/OfflineBanner'
 
 const getFileTypeColor = (unit: number) => {
     if (unit >= 4) return Colors.purple
@@ -29,13 +31,6 @@ function CourseCard({ course, onPress }: { course: CourseData, onPress: () => vo
                         </View>
                         <Text style={{color: Colors.inkMuted, fontSize:11, fontFamily:'PlusJakartaSans-Medium'}}>{course.courseUnit} units</Text>
                     </View>
-                    <View style={styles.statusPill}>
-                        <Text style={styles.statusPillText}>In Progress</Text>
-                    </View>
-                </View>
-                <Text style={styles.courseTitle}>{course.courseName}</Text>
-                <Text style={styles.lecturer}>{course.lecturerName}</Text>
-                <View style={styles.cardBottom}>
                     <View style={styles.courseInfo}>
                         <Ionicons name='calendar-outline' color={Colors.inkSecondary}/>
                         <Text style={styles.courseInfoText}>{course.examDate
@@ -43,6 +38,8 @@ function CourseCard({ course, onPress }: { course: CourseData, onPress: () => vo
                         : 'No exam date set'}</Text>
                     </View>
                 </View>
+                <Text style={styles.courseTitle}>{course.courseName}</Text>
+                <Text style={styles.lecturer}>{course.lecturerName}</Text>
             </View>
         </Pressable>  
     )
@@ -51,8 +48,9 @@ function CourseCard({ course, onPress }: { course: CourseData, onPress: () => vo
 const Courses = () => {
     const insets = useSafeAreaInsets()
     const router = useRouter()
-    const {data: courseData, isLoading, error} = useCourses()
+    const {data: courses, isLoading, error} = useCourses()
     const [modalVisible, setModalVisible] = useState(false)
+    const { isOnline } = useNetworkStatus()
     
     if(isLoading){
         return <ScreenLoader />
@@ -60,19 +58,22 @@ const Courses = () => {
     return (
         <>
             <FlatList 
-                data={courseData?.courses}
+                data={courses}
                 keyExtractor={(item) =>  item._id}
                 ListHeaderComponent={
-                    <View style={styles.headerContainer}>
-                        <View style={{marginBottom:20}}>
-                            <Text style={styles.heading}>My Courses</Text>
+                    <View>
+                        {!isOnline && <OfflineBanner />}
+                        <View style={styles.headerContainer}>
+                            <View style={{marginBottom:20}}>
+                                <Text style={styles.heading}>My Courses</Text>
+                            </View>
+                            <Pressable 
+                                style={styles.headerBtn}
+                                onPress={() => setModalVisible(true)}
+                            >
+                                <Entypo name='plus' size={27} color={"#fff"}/>
+                            </Pressable>
                         </View>
-                        <Pressable 
-                            style={styles.headerBtn}
-                            onPress={() => setModalVisible(true)}
-                        >
-                            <Entypo name='plus' size={27} color={"#fff"}/>
-                        </Pressable>
                     </View>
                 }
                 renderItem={({ item }) => (

@@ -141,7 +141,9 @@ export type QuizSubmitResult = {
         isCorrect: boolean
         difficulty: 'recall' | 'application' | 'analysis'
         _id:string
-    }[]
+    }[],
+    createdAt?: string
+    updatedAt?: string
 }
 
 export type ChatMessage = {

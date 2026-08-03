@@ -27,7 +27,7 @@ export const createCourse = (payload: CoursePayload) => {
     return apiClient.post<CreateCourseResponse>('/api/courses', payload)
 }
 
-export const getCourses = () => apiClient.get<CourseResponse>('/api/courses')
+export const getCourses = () => apiClient.get('/api/courses')
 
 export const getCourse = (courseId: string) => apiClient.get(`/api/courses/${courseId}`)
 

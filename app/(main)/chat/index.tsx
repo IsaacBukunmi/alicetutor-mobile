@@ -10,6 +10,8 @@ import { Colors } from '@/constants'
 import { ChatSession, CourseData } from '@/types'
 import { createChatSession } from '@/api/chat'
 import { useQueryClient } from '@tanstack/react-query'
+import OfflineState from '@/components/OfflineState'
+import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -197,6 +199,9 @@ function NewSessionModal({
   const [sessionType, setSessionType] = useState<'general' | 'course_specific' | null>(null)
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+ 
+
+  
 
   const canStart =
     sessionType === 'general' ||
@@ -475,7 +480,8 @@ export default function ChatScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const { data: sessions, isLoading } = useChatSessions()
-  const { data: courseData } = useCourses()
+  const { data: courses } = useCourses()
+  const { isOnline } = useNetworkStatus()
 
   const [filter, setFilter] = useState<FilterType>('all')
   const [showNewSession, setShowNewSession] = useState(false)
@@ -486,6 +492,10 @@ export default function ChatScreen() {
     if (filter === 'all') return true
     return s.type === filter
   }) ?? []
+
+  if(!isOnline){
+    return <OfflineState message="You appear to be offline. Chat with Alice requires an internet connection."/>
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.bgApp }}>
@@ -639,7 +649,7 @@ export default function ChatScreen() {
       <NewSessionModal
         visible={showNewSession}
         onClose={() => setShowNewSession(false)}
-        courses={courseData?.courses as CourseData[]}
+        courses={courses as CourseData[]}
       />
     </View>
   )

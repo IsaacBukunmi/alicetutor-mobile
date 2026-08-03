@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, Pressable, FlatList, Image } from 'react-native'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Colors, Shadows } from '@/constants'
 import { useAuthStore } from '@/stores/authStore'
@@ -10,6 +10,10 @@ import { getToday } from '@/utils/helpers'
 import ScreenLoader from '@/components/ScreenLoader'
 import { StudyData, UpcomingExamsData } from '@/types'
 import { useRouter } from 'expo-router'
+import { useNetworkStatus } from '@/hooks/useNetworkStatus'
+import OfflineState from '@/components/OfflineState'
+import { useQueryClient } from '@tanstack/react-query'
+import { fetchCourses } from '@/hooks/useCourses'
 
 const formatLastStudied = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime()
@@ -150,6 +154,20 @@ const Home = () => {
     const router = useRouter()
     const { student } = useAuthStore()
     const { data, isLoading, error } = useDashboard()
+    const { isOnline } = useNetworkStatus()
+    const queryClient = useQueryClient()
+
+    useEffect(() => {
+        queryClient.prefetchQuery({
+            queryKey: ['courses'],
+            queryFn: fetchCourses,
+            staleTime: 1000 * 60 * 5,
+        })
+    }, [])
+
+    if(!isOnline){
+        return <OfflineState />
+    }
 
     if(isLoading){
         return <ScreenLoader />
@@ -259,9 +277,9 @@ const Home = () => {
                             }}
                         >
                             <Text style={{fontFamily: 'PlusJakartaSans-ExtraBold', fontSize:17}}>Upcoming exams</Text>
-                            <Pressable>
+                            {/* <Pressable>
                                 <Text style={{color: Colors.primary, fontFamily: 'PlusJakartaSans-Bold'}}>See all</Text> 
-                            </Pressable>
+                            </Pressable> */}
                         </View>
                         <FlatList
                             data={data?.upcomingExams}
@@ -344,7 +362,7 @@ const Home = () => {
                     </View>
                 </View>
                 <Pressable
-                    onPress={() => {}}
+                    onPress={() => router.push('/chat')}
                     style={{
                         backgroundColor: Colors.primaryDark,
                         borderRadius: 14,

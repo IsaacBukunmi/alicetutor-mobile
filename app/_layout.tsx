@@ -23,7 +23,7 @@ export default function RootLayout() {
   })
 
   const { loadSession } = useAuthStore()
-  const { isOnline } = useNetworkStatus()
+  
 
   useEffect(() => {
     if(fontsLoaded || fontError){
@@ -41,10 +41,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <View style={{flex:1}}>
-        <Stack screenOptions={{ headerShown: false }}/>
-        {!isOnline && <OfflineBanner />}
-      </View>
+      <Stack screenOptions={{ headerShown: false }}/>
     </QueryClientProvider>
   )
 }
