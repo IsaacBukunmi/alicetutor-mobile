@@ -107,7 +107,7 @@ function MaterialRow({ material, onPress }: { material: Material; onPress: () =>
 					<View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
 						<SpinnerIcon size={12} color={Colors.amberText} />
 						<Text style={{ fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, color: Colors.amberText }}>
-						Processing...
+							Processing... pull down to refresh
 						</Text>
 					</View>
 				)}
