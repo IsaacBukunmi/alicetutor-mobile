@@ -33,12 +33,14 @@ const Profile = () => {
                 flex:1,
                 paddingHorizontal: 24,
                 paddingTop: insets.top + 24,
-                paddingBottom: insets.bottom + 24,
                 backgroundColor:Colors.bgApp
             }}
         >
             <ScrollView
                 showsVerticalScrollIndicator={false}
+                style={{
+                    flex: 1
+                }}
             >
                 <View>
                     <Text style={styles.profileHeading}>Profile</Text>

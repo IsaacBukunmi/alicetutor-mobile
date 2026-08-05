@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable, FlatList, Image } from 'react-native'
+import { View, Text, ScrollView, Pressable, FlatList, Image, Platform } from 'react-native'
 import React, { useEffect } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Colors, Shadows } from '@/constants'
@@ -179,7 +179,7 @@ const Home = () => {
                 flex:1, 
                 paddingHorizontal:24,
                 paddingTop: insets.top + 12,
-                backgroundColor:Colors.bgApp
+                backgroundColor:Colors.bgApp,
             }}
             contentContainerStyle={{ paddingBottom:32 }}
             showsVerticalScrollIndicator={false}
@@ -334,7 +334,8 @@ const Home = () => {
                 paddingVertical:14,
                 paddingHorizontal:16,
                 borderRadius:16,
-                marginTop:20
+                marginTop:20,
+                marginBottom:Platform.OS ==="android" ? 40 : 0
             }}>
                 <View style={{flexDirection:'row', gap:4, marginBottom:6}}>
                     <View 
@@ -368,7 +369,6 @@ const Home = () => {
                         borderRadius: 14,
                         paddingVertical: 14,
                         alignItems: 'center',
-
                     }}
                 >
                     <View style={{flexDirection: 'row', gap:10}}>

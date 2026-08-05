@@ -7,6 +7,7 @@ import { useEffect, useState } from "react"
 import { Alert, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native"
 import OnboardingInput from "./OnboardingInput"
 import LoadingSpinner from "./LoadingSpinner"
+import CalendarPickerModal from "./CalendarPickerModal"
 
 type Props = {
     visible: boolean
@@ -26,6 +27,7 @@ export default function CourseFormModal({ visible, onClose, course }: Props){
     const [examDate, setExamDate] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState('')
+    const [showCalendar, setShowCalendar] = useState(false)
 
      // Pre-fill fields in edit mode
     useEffect(() => {
@@ -112,6 +114,7 @@ export default function CourseFormModal({ visible, onClose, course }: Props){
                             flexDirection: 'row',
                             alignItems: 'center',
                             marginBottom: 24,
+                            paddingTop:Platform.OS === "android" ? 30 : 0
                         }}>
                             <Pressable
                                 onPress={onClose}
@@ -248,13 +251,39 @@ export default function CourseFormModal({ visible, onClose, course }: Props){
                                 (optional)
                                 </Text>
                             </View>
-                            <OnboardingInput
-                                label=""
-                                value={examDate}
-                                onChangeText={setExamDate}
-                                placeholder="YYYY-MM-DD"
-                                autoCapitalize="none"
-                                keyboardType="numeric"
+                            <Pressable
+                                onPress={() => setShowCalendar(true)}
+                                style={{
+                                    backgroundColor: Colors.bgCard,
+                                    borderWidth: 1,
+                                    borderColor: Colors.borderInput,
+                                    borderRadius: 12,
+                                    paddingHorizontal: 16,
+                                    paddingVertical: 14,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                }}
+                            >
+                                <Text style={{
+                                    fontFamily: 'PlusJakartaSans-Medium',
+                                    fontSize: 15,
+                                    color: examDate ? Colors.inkHeading : Colors.inkMuted,
+                                }}>
+                                    {examDate ? examDate : 'Select a date'}
+                                </Text>
+                                <Ionicons
+                                    name="calendar-outline"
+                                    size={18}
+                                    color={examDate ? Colors.primary : Colors.inkMuted}
+                                />
+                            </Pressable>
+                            {/* Calendar modal */}
+                            <CalendarPickerModal
+                                visible={showCalendar}
+                                onClose={() => setShowCalendar(false)}
+                                onSelect={(date) => setExamDate(date)}
+                                selectedDate={examDate}
                             />
                         </View>
 

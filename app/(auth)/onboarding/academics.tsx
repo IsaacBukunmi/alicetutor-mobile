@@ -31,7 +31,7 @@ export default function OnboardingAcademicScreen() {
         setOnboardingData({
             university: university.trim(),
             courseOfStudy: courseOfStudy.trim(),
-            program,
+            program: program.toLowerCase(),
             level
         })
         router.push('/(auth)/onboarding/account')

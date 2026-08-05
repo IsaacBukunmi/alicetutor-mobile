@@ -134,6 +134,7 @@ export default function UploadMaterialModal({ visible, onClose, courseId }: Prop
                         flexDirection: 'row',
                         alignItems: 'center',
                         marginBottom: 28,
+                        paddingTop:Platform.OS === "android" ? 30 : 0
                     }}>
                         <Pressable
                             onPress={handleClose}
